@@ -1,34 +1,35 @@
 import re
 import random
 import time
-
-
+import sqlite3
+import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.tokenize import casual_tokenize
 from sklearn.externals import joblib
-from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.layers import Dense, Input, LSTM, Dropout, Embedding, RepeatVector, concatenate, \
+from keras.models import Model
+from keras.optimizers import Adam
+from keras.layers import Dense, Input, LSTM, Dropout, Embedding, RepeatVector, concatenate, \
     TimeDistributed
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.models import model_from_json
+from keras.utils import np_utils
+from keras.models import model_from_json
 import config
-import tensorflow.keras
+import keras
 import string
 
 
 
 print('Library versions:')
+print('keras:{}'.format(keras.__version__))
+import pandas as pd
+print('pandas:{}'.format(pd.__version__))
 import sklearn
 print('sklearn:{}'.format(sklearn.__version__))
 import nltk
 print('nltk:{}'.format(nltk.__version__))
 import numpy as np
 print('numpy:{}'.format(np.__version__))
-import tensorflow
-print('tensorflow:{}'.format(np.__version__))
 
-
+import config
 
 import string
 exclude = set(string.punctuation)
@@ -75,14 +76,26 @@ class twitterbot:
         return ' '.join(self.reverse_vocab[idx] for idx in word_idxs if idx != self.c.PAD).strip()
 
     def read_text_input(self, txt_file):
-        vals = []
-        with open(txt_file) as fp:  
-            line = fp.readline()
-            vals=line.split('\t')
-            self.texts = self.preprocess(vals[0])
-            self.responses = self.preprocess(vals[1])
+        df = pd.read_csv(txt_file, sep='\t', names=['tweet', 'response'])
+        print(df.head())
+        df.tweet = df.tweet.apply(self.preprocess)
+        df.response = df.response.apply(self.preprocess)
+        self.texts = df.tweet
+        self.responses = df.response
         print('t shape: {}'.format(self.texts.shape))
         print('r shape: {}'.format(self.responses.shape))
+  
+    def read_sqlite_data(self, db_file):
+        conn = sqlite3.connect(db_file)
+        df = pd.read_sql_query("select * from tweets;", conn)
+        df.tweet = df.tweet.apply(self.preprocess)
+        df.response = df.response.apply(self.preprocess)
+        
+        self.texts = df.tweet
+        self.responses = df.response
+        print('t shape: {}'.format(self.texts.shape))
+        print('r shape: {}'.format(self.responses.shape))
+  
 
     def build_vocab(self):
         count_vec = CountVectorizer(
@@ -195,7 +208,7 @@ class twitterbot:
     def binarize_labels(self, labels):
         # Helper function that turns integer word indexes into sparse binary matrices for
         #    the expected model output.
-        return np.array([to_categorical(row, num_classes=self.c.MAX_VOCAB_SIZE)
+        return np.array([np_utils.to_categorical(row, num_classes=self.c.MAX_VOCAB_SIZE)
                          for row in labels])
 
 
@@ -273,10 +286,10 @@ class twitterbot:
         self.build_vocab()
         
         self.build_vectors()
-        self.build_model()
-        #self.model = self.load_model_from_disk('s2s_model.json','s2s_model.h5')
-        #optimizer = Adam(lr=self.c.LEARNING_RATE, clipvalue=5.0)
-        #self.model.compile(optimizer=optimizer, loss='categorical_crossentropy')
+        #self.build_model()
+        self.model = self.load_model_from_disk('s2s_model.json','s2s_model.h5')
+        optimizer = Adam(lr=self.c.LEARNING_RATE, clipvalue=5.0)
+        self.model.compile(optimizer=optimizer, loss='categorical_crossentropy')
 
         print('do_train')    
         
