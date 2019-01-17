@@ -6,20 +6,20 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.tokenize import casual_tokenize
 from sklearn.externals import joblib
-from keras.models import Model
-from keras.optimizers import Adam
-from keras.layers import Dense, Input, LSTM, Dropout, Embedding, RepeatVector, concatenate, \
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Dense, Input, LSTM, Dropout, Embedding, RepeatVector, concatenate, \
     TimeDistributed
-from keras.utils import np_utils
-from keras.models import model_from_json
+from tensorflow.keras import utils as np_utils
+from tensorflow.keras.models import model_from_json
 import config
-import keras
+import tensorflow.keras
 import string
 
 
 
 print('Library versions:')
-print('keras:{}'.format(keras.__version__))
+
 import pandas as pd
 print('pandas:{}'.format(pd.__version__))
 import sklearn
