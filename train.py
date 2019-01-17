@@ -1,5 +1,5 @@
 import twitterbot
 
-#add a comment
+#add another comment
 tb = twitterbot.twitterbot()
 tb.train()
