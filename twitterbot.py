@@ -12,10 +12,11 @@ from tensorflow.keras.layers import Dense, Input, LSTM, Dropout, Embedding, Repe
     TimeDistributed
 from tensorflow.keras import utils as np_utils
 from tensorflow.keras.models import model_from_json
+from tensorflow.keras.models import load_model
 import config
 import tensorflow.keras
 import string
-
+import pickle
 
 
 print('Library versions:')
@@ -55,6 +56,49 @@ class twitterbot:
         self.c = config.params()
         self.best_score = 100
 
+#----------------------I/O stuff consolodated here
+    def dump_parameter_file(self, data, fname):
+        with open(fname, 'wb') as fp:
+            pickle.dump(data, fp)
+    
+    def load_parameter_file(self, fname):
+        with open(fname, 'rb') as fp:
+            return pickle.load(fp)
+    
+    def load_model_from_disk(self, model_file):
+        # load weights into new model
+        self.model=load_model(model_file)
+        print("Loaded model from disk")
+        return self.model
+
+    def save(self):
+        # serialize weights to HDF5
+        self.model.save(self.c.MODEL_FNAME)
+        print("Saved model to disk")
+
+    def read_input_data(self, input_file):
+        df = pd.read_csv(input_file, sep='\t' ,names=['tweet','response'])
+        df.tweet = df.tweet.apply(self.preprocess)
+        df.response = df.response.apply(self.preprocess)
+        
+        self.texts = df.tweet
+        self.responses = df.response
+        print('t shape: {}'.format(self.texts.shape))
+        print('r shape: {}'.format(self.responses.shape))
+  
+    def load_embeddings_index(self):
+        embeddings_index={}
+        f = open('glove.6B.100d.txt')
+        for line in f:
+            values = line.split()
+            word = values[0]
+            coefs = np.asarray(values[1:], dtype='float32')
+            embeddings_index[word] = coefs
+        f.close()
+        return embeddings_index
+#------------------------------------------------
+
+
     def preprocess(self, raw_word):
         #print(raw_word)
         l1 = ['won’t','won\'t','wouldn’t','wouldn\'t','’m', '’re', '’ve', '’ll', '’s','’d', 'n’t', '\'m', '\'re', '\'ve', '\'ll', '\'s', '\'d', 'can\'t', 'n\'t']
@@ -75,37 +119,18 @@ class twitterbot:
     def from_word_idx(self, word_idxs):
         return ' '.join(self.reverse_vocab[idx] for idx in word_idxs if idx != self.c.PAD).strip()
 
-    def read_text_input(self, txt_file):
-        df = pd.read_csv(txt_file, sep='\t', names=['tweet', 'response'])
-        print(df.head())
-        df.tweet = df.tweet.apply(self.preprocess)
-        df.response = df.response.apply(self.preprocess)
-        self.texts = df.tweet
-        self.responses = df.response
-        print('t shape: {}'.format(self.texts.shape))
-        print('r shape: {}'.format(self.responses.shape))
-  
-    def read_sqlite_data(self, db_file):
-        conn = sqlite3.connect(db_file)
-        df = pd.read_sql_query("select * from tweets;", conn)
-        df.tweet = df.tweet.apply(self.preprocess)
-        df.response = df.response.apply(self.preprocess)
-        
-        self.texts = df.tweet
-        self.responses = df.response
-        print('t shape: {}'.format(self.texts.shape))
-        print('r shape: {}'.format(self.responses.shape))
-  
+    
+    
+
 
     def build_vocab(self):
         count_vec = CountVectorizer(
             tokenizer=casual_tokenize, max_features=self.c.MAX_VOCAB_SIZE - 3)
         print("Fitting CountVectorizer on X and Y text data...")
         count_vec.fit(self.texts, self.responses)
-        joblib.dump(count_vec, 'count_vec.joblib')
+        self.dump_parameter_file(count_vec, self.c.COUNT_VEC_FNAME)
 
         self.analyzer = count_vec.build_analyzer()
-        #joblib.dump(self.analyzer, 'analyzer.joblib')
         self.vocab = {k: v + 3 for k, v in count_vec.vocabulary_.items()}
         self.vocab['__unk__'] = self.c.UNK
         self.vocab['__pad__'] = self.c.PAD
@@ -113,7 +138,27 @@ class twitterbot:
         # Used to turn seq2seq predictions into human readable strings
         self.reverse_vocab = {v: k for k, v in self.vocab.items()}
         print("Learned vocab of {} items.".format(len(self.vocab)))
-        joblib.dump(self.vocab, 'vocab.joblib')
+        self.dump_parameter_file(self.vocab, self.c.VOCAB_FNAME)
+
+    def build_embedding_matrix(self):
+        embeddings_index = self.load_embeddings_index()
+        print('Found %s word vectors.' % len(embeddings_index))
+        self.embedding_matrix = np.zeros((self.c.MAX_VOCAB_SIZE, self.c.EMBEDDING_SIZE))
+
+        i = 0
+        j = 0
+        for word in self.vocab:
+            embedding_vector = embeddings_index.get(word)
+            
+            if embedding_vector is not None:
+                #print('adding word {} to matrix'.format(word))
+                # words not found in embedding index will be all-zeros.
+                self.embedding_matrix[i] = embedding_vector
+                j += 1
+            i += 1
+        print('Embedded {} words'.format(j))
+
+
 
     def build_vectors(self):
         print("Calculating word indexes for X...")
@@ -138,6 +183,8 @@ class twitterbot:
             output_dim=self.c.EMBEDDING_SIZE,
             input_dim=self.c.MAX_VOCAB_SIZE,
             input_length=self.c.MAX_MESSAGE_LEN,
+            weights=[self.embedding_matrix],
+            trainable=False,
             name='embedding',
         )
 
@@ -258,42 +305,34 @@ class twitterbot:
 
         
 
-    def load_model_from_disk(self, model_file, weights_file):
-        json_file = open(model_file, 'r')
-        lm_json = json_file.read()
-        json_file.close()
-        lm = model_from_json(lm_json)
-        # load weights into new model
-        lm.load_weights(weights_file)
-        print("Loaded model from disk")
-        return lm
+    
 
     def save(self):
-        model_json = self.model.to_json()
-        with open("s2s_model.json", "w") as json_file:
-            json_file.write(model_json)
         # serialize weights to HDF5
-        self.model.save_weights("s2s_model.h5")
+        self.model.save(self.c.MODEL_FNAME)
         print("Saved model to disk")
 
     def train(self):
         # self.read_csv_data(filename)
         #self.read_sqlite_data('test.db')
-        self.read_text_input('tweets.txt')
-        num_bad = 20
+        self.read_input_data(self.c.INPUT_FNAME)
+        
+        num_bad = self.c.BREAK_BAD
         curr_bad = 0
         tmp_score = 0
         self.build_vocab()
+        self.build_embedding_matrix()
+        #print(type(self.vocab))
         
         self.build_vectors()
         #self.build_model()
-        self.model = self.load_model_from_disk('s2s_model.json','s2s_model.h5')
-        optimizer = Adam(lr=self.c.LEARNING_RATE, clipvalue=5.0)
-        self.model.compile(optimizer=optimizer, loss='categorical_crossentropy')
+        self.load_model_from_disk(self.c.MODEL_FNAME)
+        #optimizer = Adam(lr=self.c.LEARNING_RATE)
+        #self.model.compile(optimizer=optimizer, loss='categorical_crossentropy')
 
         print('do_train')    
         
-        for x in range(30):
+        for x in range(self.c.NUM_ITERATIONS):
             print('epoch {}===================================================================='.format(x))
             for start_idx in range(0, len(self.train_x), self.c.SUB_BATCH_SIZE):
                 curr_bad = 0
@@ -314,21 +353,18 @@ class twitterbot:
             break
         
         self.save()
-        
+
+   
+
     def create_responder(self):
-        count_vec = joblib.load('count_vec.joblib')
+        count_vec = self.load_parameter_file(self.c.COUNT_VEC_FNAME)
         self.analyzer = count_vec.build_analyzer()
-        self.vocab = joblib.load('vocab.joblib')
+        self.vocab = self.load_parameter_file(self.c.VOCAB_FNAME)
         self.reverse_vocab = {v: k for k, v in self.vocab.items()}
-        self.model = self.load_model_from_disk('s2s_model.json', 's2s_model.h5')
+        self.model = self.load_model_from_disk(self.c.MODEL_FNAME)
+        print(type(self.model))
         
         
 
-#tb = twitterbot()
-#tb.create_responder()
 
-
-#while True:
-#    i = input(">")
-#    print("< {}".format(tb.respond_to(tb.preprocess(i))))
         

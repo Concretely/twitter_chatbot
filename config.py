@@ -28,3 +28,16 @@ class params:
         # Implementaiton detail for allowing this to be run in Kaggle's notebook hardware
         self.SUB_BATCH_SIZE = 500
 
+        self.CLIPVALUE=5.0
+
+        self.NUM_ITERATIONS=30
+
+        self.COUNT_VEC_FNAME = 'count_vec.pkl'
+        self.VOCAB_FNAME = 'vocab.pkl'
+
+        self.MODEL_FNAME='s2s_model.h5'
+
+        self.INPUT_FNAME='tweets.txt'
+
+        self.BREAK_BAD=20
+
