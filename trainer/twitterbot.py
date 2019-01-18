@@ -1,7 +1,3 @@
-#  Added some Comments
-#  More
-
-
 import re
 import random
 import time
@@ -9,7 +5,8 @@ import sqlite3
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.tokenize import casual_tokenize
-from sklearn.externals import joblib
+
+import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import Dense, Input, LSTM, Dropout, Embedding, RepeatVector, concatenate, \
@@ -24,7 +21,7 @@ import pickle
 
 
 print('Library versions:')
-
+print('tensorflow:{}'.format(tf.__version__))
 import pandas as pd
 print('pandas:{}'.format(pd.__version__))
 import sklearn
@@ -92,7 +89,7 @@ class twitterbot:
   
     def load_embeddings_index(self):
         embeddings_index={}
-        f = open('glove.6B.100d.txt')
+        f = open(self.c.EMBEDDING_FNAME)
         for line in f:
             values = line.split()
             word = values[0]
@@ -312,11 +309,6 @@ class twitterbot:
 
     
 
-    def save(self):
-        # serialize weights to HDF5
-        self.model.save(self.c.MODEL_FNAME)
-        print("Saved model to disk")
-
     def train(self):
         # self.read_csv_data(filename)
         #self.read_sqlite_data('test.db')
@@ -346,12 +338,12 @@ class twitterbot:
                 if tmp_score < self.best_score:
                     self.best_score = tmp_score
                     curr_bad = 0
-                    print('self.best_score = {}'.format(self.best_score))
+                    print('saving self.best_score = {}'.format(self.best_score))
                     self.save()
                 else:
-                    print('exiting because of curr_bad')
                     curr_bad += 1
                     if curr_bad >= num_bad:
+                        print('exiting because of curr_bad')
                         break
             else:
                 continue

@@ -14,3 +14,6 @@ README.txt
 *.h5
 *.db
 __pycache__
+floyd*
+.floyd*
+data/
