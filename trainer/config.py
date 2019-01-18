@@ -11,12 +11,12 @@ class params:
         self.CONTEXT_SIZE = 100
         # Larger batch sizes generally reach the average response faster, but small batch sizes are
         # required for the model to learn nuanced responses.  Also, GPU memory limits max batch size.
-        self.BATCH_SIZE = 100
+        self.BATCH_SIZE = 500
         # Helps regularize network and prevent overfitting.
-        self.DROPOUT = 0.2
+        self.DROPOUT = 0.5
         # High learning rate helps model reach average response faster, but can make it hard to 
         # converge on nuanced responses
-        self.LEARNING_RATE=0.0005
+        self.LEARNING_RATE=0.5
 
         self.TRAINING_TIME=60
 
@@ -26,9 +26,9 @@ class params:
         self.START = 2  # provided to the model at position 0 for every response predicted
 
         # Implementaiton detail for allowing this to be run in Kaggle's notebook hardware
-        self.SUB_BATCH_SIZE = 500
+        self.SUB_BATCH_SIZE = 5000
 
-        self.CLIPVALUE=5.0
+        self.CLIPVALUE=0.5
 
         self.NUM_ITERATIONS=30
 
@@ -37,7 +37,7 @@ class params:
 
         self.MODEL_FNAME='s2s_model.h5'
 
-        self.INPUT_FNAME='tweets.txt'
+        self.INPUT_FNAME='/floyd/input/data/tweets.txt'
+        self.EMBEDDING_FNAME ='/floyd/input/data/glove.6B.100d.txt'
 
         self.BREAK_BAD=20
-
