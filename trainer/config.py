@@ -1,4 +1,6 @@
 #Rich added a comment to config.py
+#Rich is cooler than Grant
+
 
 class params:
     def __init__(self):
