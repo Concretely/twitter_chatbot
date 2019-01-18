@@ -1,6 +1,5 @@
 #Rich added a comment at 4:07 pm
-#Edited comment by Grant
-
+#grant added comment
 
 class params:
     def __init__(self):
