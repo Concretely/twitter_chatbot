@@ -16,7 +16,7 @@ class params:
         self.DROPOUT = 0.2
         # High learning rate helps model reach average response faster, but can make it hard to 
         # converge on nuanced responses
-        self.LEARNING_RATE=0.005
+        self.LEARNING_RATE=0.0005
 
         self.TRAINING_TIME=60
 

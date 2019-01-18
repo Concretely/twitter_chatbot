@@ -184,7 +184,6 @@ class twitterbot:
             input_dim=self.c.MAX_VOCAB_SIZE,
             input_length=self.c.MAX_MESSAGE_LEN,
             weights=[self.embedding_matrix],
-            trainable=False,
             name='embedding',
         )
 
@@ -202,6 +201,7 @@ class twitterbot:
             self.c.CONTEXT_SIZE,
             name='encoder',
             dropout=self.c.DROPOUT
+
         )
 
         context = RepeatVector(self.c.MAX_MESSAGE_LEN)(
@@ -224,15 +224,16 @@ class twitterbot:
         decoder_rnn = LSTM(
             self.c.CONTEXT_SIZE,
             name='decoder',
-            return_sequences=True,
+            return_sequences=True, 
             dropout=self.c.DROPOUT
+
         )
 
         decoder_output = decoder_rnn(decoder_input)
 
         # TimeDistributed allows the dense layer to be applied to each decoder output per timestep
         next_word_dense = TimeDistributed(
-            Dense(int(self.c.MAX_VOCAB_SIZE / 2), activation='relu'),
+            Dense(int(self.c.MAX_VOCAB_SIZE / 2), activation='softmax'),
             name='next_word_dense',
         )(decoder_output)
 
@@ -242,7 +243,7 @@ class twitterbot:
         )(next_word_dense)
 
         self.model = Model(inputs=[encoder_input, last_word_input], outputs=[next_word])
-        optimizer = Adam(lr=self.c.LEARNING_RATE, clipvalue=5.0)
+        optimizer = Adam(lr=self.c.LEARNING_RATE, clipvalue=0.5)
         self.model.compile(optimizer=optimizer, loss='categorical_crossentropy')
 
     def add_start_token(self, y_array):
@@ -325,8 +326,8 @@ class twitterbot:
         #print(type(self.vocab))
         
         self.build_vectors()
-        #self.build_model()
-        self.load_model_from_disk(self.c.MODEL_FNAME)
+        self.build_model()
+        #self.load_model_from_disk(self.c.MODEL_FNAME)
         #optimizer = Adam(lr=self.c.LEARNING_RATE)
         #self.model.compile(optimizer=optimizer, loss='categorical_crossentropy')
 
