@@ -1,3 +1,6 @@
+#Rich added a comment at 4:07 pm
+
+
 class params:
     def __init__(self):
         # 8192 - large enough for demonstration, larger values make network training slower
