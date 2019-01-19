@@ -1,9 +1,10 @@
 #Rich added a comment at 4:07 pm
 #grant added comment
-import trainer.util
+from trainer import util as cmutil
 
 class params:
     def __init__(self):
+        self.args = cmutil.parse_args()
         # 8192 - large enough for demonstration, larger values make network training slower
         self.MAX_VOCAB_SIZE = 2**13
         # seq2seq generally relies on fixed length message vectors - longer messages provide more info
@@ -34,14 +35,14 @@ class params:
 
         self.CLIPVALUE=0.5
 
-        self.NUM_ITERATIONS=30
+        self.NUM_ITERATIONS=2
 
-        self.COUNT_VEC_FNAME = 'count_vec.pkl'
-        self.VOCAB_FNAME = 'vocab.pkl'
+        self.COUNT_VEC_FNAME = self.args.output_file_dir + 'count_vec.pkl'
+        self.VOCAB_FNAME = self.args.output_file_dir + 'vocab.pkl'
 
-        self.MODEL_FNAME='s2s_model.h5'
+        self.MODEL_FNAME=self.args.output_file_dir + 's2s_model.h5'
 
-        self.INPUT_FNAME='/floyd/input/data/tweets.txt'
-        self.EMBEDDING_FNAME ='/floyd/input/data/glove.6B.100d.txt'
+        self.INPUT_FNAME=self.args.input_file_dir + '/twcs_10ktab.csv'
+        self.EMBEDDING_FNAME =self.args.input_file_dir + '/glove.6B.100d.txt'
 
         self.BREAK_BAD=20

@@ -63,6 +63,8 @@ def write_hptuning_metric(args, metric):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--job-dir', required=True, help='Model Job Directory')
+    parser.add_argument('--input-file-dir', required=True, help='where data files are stored')
+    parser.add_argument('--output-file-dir', required=True, help='where data files are stored')
     args, _ = parser.parse_known_args()
 
     return args
