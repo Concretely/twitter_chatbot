@@ -1,5 +1,6 @@
 #Rich added a comment at 4:07 pm
 #grant added comment
+import trainer.util
 
 class params:
     def __init__(self):
