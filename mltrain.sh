@@ -71,7 +71,7 @@ if [[ ${TRAIN_JOB} == "local" ]]; then
   mkdir -p jobs/${JOB_NAME}
 
   gcloud ml-engine local train \
-    --module-name trainer.model \
+    --module-name trainer.train \
     --package-path trainer \
     -- \
     --job-dir jobs/${JOB_NAME} \
@@ -87,14 +87,14 @@ elif [[ ${TRAIN_JOB} == "train" ]]; then
     --package-path trainer \
     --runtime-version 1.12 \
     --python-version 3.5 \
-    --config trainer/config/config_train.json \
+    --config trainer/trainconfig/config_train.json \
     -- \
     ${ARGS}
 
 elif [[ $TRAIN_JOB == "tune" ]]; then
 
   # set configuration for tuning
-  CONFIG_TUNE="trainer/config/config_tune.json"
+  CONFIG_TUNE="trainer/trainconfig/config_tune.json"
   gcloud ml-engine jobs submit training ${JOB_NAME} \
     --region ${REGION} \
     --scale-tier=CUSTOM \
