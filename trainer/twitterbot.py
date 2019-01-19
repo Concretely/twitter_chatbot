@@ -65,26 +65,26 @@ class twitterbot:
 
 #----------------------I/O stuff consolodated here
     def dump_parameter_file(self, data, fname):
-        with open(fname, 'wb') as fp:
+        with cm_util.open_file(fname, 'wb') as fp:
             pickle.dump(data, fp)
     
     def load_parameter_file(self, fname):
-        with open(fname, 'rb') as fp:
+        with cm_util.open_file(fname, 'rb') as fp:
             return pickle.load(fp)
     
     def load_model_from_disk(self, model_file):
         # load weights into new model
-        self.model=load_model(model_file)
+        self.model=load_model(cm_util.open_file(model_file))
         print("Loaded model from disk")
         return self.model
 
     def save(self):
         # serialize weights to HDF5
-        self.model.save(self.c.MODEL_FNAME)
+        cm_util.save_model(self.model, self.c.MODEL_FNAME)
         print("Saved model to disk")
 
     def read_input_data(self, input_file):
-        df = pd.read_csv(input_file, sep='\t' ,names=['tweet','response'])
+        df = pd.read_csv(cm_util.open_file_for_string(input_file), sep='\t' ,names=['tweet','response'])
         df.tweet = df.tweet.apply(self.preprocess)
         df.response = df.response.apply(self.preprocess)
         
@@ -95,7 +95,7 @@ class twitterbot:
   
     def load_embeddings_index(self):
         embeddings_index={}
-        f = open(self.c.EMBEDDING_FNAME)
+        f = cm_util.open_file(self.c.EMBEDDING_FNAME, 'r')
         for line in f:
             values = line.split()
             word = values[0]
