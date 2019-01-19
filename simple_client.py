@@ -1,4 +1,4 @@
-import twitterbot
+from trainer import twitterbot
 
 
 tb = twitterbot.twitterbot()

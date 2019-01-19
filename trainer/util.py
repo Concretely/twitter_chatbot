@@ -28,7 +28,7 @@ def open_file(file_name, mode):
     if file_name.startswith('gs:/'):
         file_stream = file_io.FileIO(file_name, mode=mode)
     else:
-        file_stream = open (file_name, mode)
+        file_stream = open (file_name, mode=mode)
     return file_stream
 
 def open_file_for_string(file_name):
@@ -39,11 +39,14 @@ def open_file_for_string(file_name):
     return file_stream
 
 def save_model(model, file_name):
-    model.save(os.path.basename(file_name))
     if file_name.startswith('gs:/'):
+        model.save(os.path.basename(file_name))
         with file_io.FileIO(os.path.basename(file_name), mode='rb') as input_f:
             with file_io.FileIO(file_name, mode='wb') as output_f:
                 output_f.write(input_f.read())
+    else:
+        model.save(file_name)
+
 
 def write_hptuning_metric(args, metric):
   """

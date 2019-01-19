@@ -72,7 +72,7 @@ class twitterbot:
     
     def load_model_from_disk(self, model_file):
         # load weights into new model
-        self.model=load_model(cm_util.open_file(model_file))
+        self.model=load_model(cm_util.open_file_for_string(model_file))
         print("Loaded model from disk")
         return self.model
 
@@ -268,6 +268,7 @@ class twitterbot:
 
     def respond_to(self, text):
         # Helper function that takes a text input and provides a text output.
+        print(text)
         input_y = self.add_start_token(
             self.c.PAD * np.ones((1, self.c.MAX_MESSAGE_LEN)))
         idxs = np.array(self.to_word_idx(text)).reshape(
@@ -310,7 +311,7 @@ class twitterbot:
         return test_results    
 
         
-
+    
     
 
     def train(self):
