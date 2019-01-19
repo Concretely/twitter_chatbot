@@ -83,7 +83,7 @@ elif [[ ${TRAIN_JOB} == "train" ]]; then
     --region $REGION \
     --scale-tier=CUSTOM \
     --job-dir ${BUCKET}/jobs/${JOB_NAME} \
-    --module-name trainer.model \
+    --module-name trainer.train \
     --package-path trainer \
     --runtime-version 1.12 \
     --python-version 3.5 \

@@ -26,23 +26,23 @@ def ensure_local_file(input_file):
 
 def open_file(file_name, mode):
     if file_name.startswith('gs:/'):
-        file_stream = file_io.FileIO(file_name, mode='r')
+        file_stream = file_io.FileIO(file_name, mode=mode)
     else:
         file_stream = open (file_name, mode)
     return file_stream
 
 def open_file_for_string(file_name):
     if file_name.startswith('gs:/'):
-        file_stream = StringIO(file_io.FileIO(file_name, mode='r')).read()
+        file_stream = StringIO(file_io.FileIO(file_name, mode='r').read())
     else:
         file_stream = file_name
     return file_stream
 
 def save_model(model, file_name):
-    model.save(file_name)
+    model.save(os.path.basename(file_name))
     if file_name.startswith('gs:/'):
-        with file_io.FileIO(file_name, mode='r') as input_f:
-            with file_io.FileIO(file_name, mode='w+') as output_f:
+        with file_io.FileIO(os.path.basename(file_name), mode='rb') as input_f:
+            with file_io.FileIO(file_name, mode='wb') as output_f:
                 output_f.write(input_f.read())
 
 def write_hptuning_metric(args, metric):

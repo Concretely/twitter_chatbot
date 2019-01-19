@@ -42,7 +42,7 @@ class params:
 
         self.MODEL_FNAME=self.args.output_file_dir + 's2s_model.h5'
 
-        self.INPUT_FNAME=self.args.input_file_dir + '/twcs_10ktab.csv'
-        self.EMBEDDING_FNAME =self.args.input_file_dir + '/glove.6B.100d.txt'
+        self.INPUT_FNAME=self.args.input_file_dir + 'twcs_10ktab.csv'
+        self.EMBEDDING_FNAME =self.args.input_file_dir + 'glove.6B.100d.txt'
 
         self.BREAK_BAD=20

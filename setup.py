@@ -3,7 +3,8 @@ from setuptools import setup
 
 REQUIRED_PACKAGES = ['Keras==2.1.2',
 		     'h5py==2.9.0',
-		     'sh==1.12.14']
+		     'sh==1.12.14',
+             'nltk==3.4']
 
 setup(
     name='trainer',
